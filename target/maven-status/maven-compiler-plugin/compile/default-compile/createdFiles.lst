@@ -1,0 +1,9 @@
+com\example\banca\repository\ClienteRepository.class
+com\example\banca\controller\HomeController.class
+com\example\banca\model\Cliente.class
+com\example\banca\model\Transferencia.class
+com\example\banca\config\DatabaseSeeder.class
+com\example\banca\controller\BancaApiController.class
+com\example\banca\BancaApplication.class
+com\example\banca\repository\TransferenciaRepository.class
+com\example\banca\dto\TransferRequest.class

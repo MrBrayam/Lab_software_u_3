@@ -1,45 +1,44 @@
-# Sistema de Transferencias Bancarias (Flask + MySQL)
+# Sistema de Transferencias Bancarias (Spring Boot + MySQL)
 
-Este es un proyecto premium de banca móvil con un flujo de transferencia en 3 pantallas, selector de clientes activos e historial de transacciones dinámico.
-
----
-
-## 🚀 Creación Automatizada de Base de Datos
-
-**La base de datos se crea e inicializa de forma 100% automática al iniciar la aplicación.** 
-
-Cuando cualquier persona clona el repositorio y ejecuta la aplicación por primera vez, el archivo backend `app.py` realiza los siguientes pasos de forma automática:
-1. **Conexión al Servidor**: Se conecta a tu servidor MySQL local (`localhost:3307` con el usuario `root` sin contraseña).
-2. **Creación de la BD**: Si la base de datos `practica_bd` no existe en el servidor, el script ejecuta la instrucción `CREATE DATABASE IF NOT EXISTS practica_bd` para crearla al instante.
-3. **Estructura de Tablas**: Crea las tablas `clientes` y `transferencias` (vinculadas mediante claves foráneas) en caso de que falten.
-4. **Siembra de Datos (Seeding)**: Inserta automáticamente 4 clientes de prueba con saldos iniciales reales para que la aplicación sea totalmente interactiva desde el primer segundo.
+Este es un proyecto premium de banca móvil con un flujo de transferencia en 3 pantallas, selector de clientes activos e historial de transacciones dinámico, migrado a **Java + Spring Boot**.
 
 ---
 
-## 🛠️ Requisitos e Instalación
+## 🚀 Creación Automatizada de Base de Datos y Tablas
 
-### 1. Requisitos Previos
-- Tener instalado **Python 3.8 o superior**.
-- Tener activo **MySQL** en el puerto `3307` (por ejemplo, mediante XAMPP configurando el puerto en `3307`).
+**La base de datos y la estructura de tablas se inicializan automáticamente al arrancar la aplicación.**
 
-### 2. Instalación de Dependencias
-Abre una terminal en la carpeta raíz del proyecto y ejecuta el siguiente comando para instalar Flask y los conectores de base de datos necesarios:
+Cuando ejecutas el servidor por primera vez, Spring Boot realiza las siguientes tareas de forma autónoma:
+1. **Creación de la BD**: La URL de la base de datos incluye `createDatabaseIfNotExist=true`, lo que le indica a MySQL que cree la base de datos `practica_bd` en el puerto `3307` si no existe.
+2. **Generación de Tablas**: Gracias a Hibernate y Spring Data JPA (`spring.jpa.hibernate.ddl-auto=update`), las tablas `clientes` y `transferencias` (con sus relaciones de clave foránea) se crean automáticamente según las clases de entidad en Java.
+3. **Siembra de Clientes (Seeding)**: En el primer arranque, el componente `DatabaseSeeder` detecta si la tabla de clientes está vacía e inserta automáticamente a los 4 clientes de prueba con sus respectivos saldos y números de cuenta.
 
-```bash
-pip install -r requirements.txt
+---
+
+## 🛠️ Requisitos de Ejecución
+
+- **Java**: JDK 21 instalado.
+- **MySQL**: Servidor activo en el puerto `3307` (por ejemplo, con XAMPP) con usuario `root` y sin contraseña.
+
+---
+
+## 🏃 Cómo Compilar y Ejecutar la Aplicación
+
+El proyecto incluye el Maven Wrapper (`mvnw`), por lo que no es necesario instalar Maven de forma global.
+
+### 1. Compilar y empaquetar el proyecto:
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
+.\mvnw clean package -DskipTests
 ```
 
----
-
-## 🏃 Cómo Ejecutar la Aplicación
-
-Para arrancar el servidor web de desarrollo:
-
-```bash
-python app.py
+### 2. Iniciar la aplicación Spring Boot:
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
+.\mvnw spring-boot:run
 ```
 
-Una vez ejecutado, abre tu navegador web y entra a:
+Una vez que se inicie correctamente (verás la salida en consola indicando que corre en el puerto `5000`), abre tu navegador web e ingresa a:
 👉 **[http://localhost:5000](http://localhost:5000)**
 
 ---

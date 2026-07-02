@@ -8,7 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Spring Boot standard path for css/style.css -->
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <!-- Background glowing ambient elements -->
@@ -178,7 +179,7 @@
         </div>
     </div>
 
-    <!-- Script connection -->
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <!-- Spring Boot standard path for js/app.js -->
+    <script src="/js/app.js"></script>
 </body>
 </html>

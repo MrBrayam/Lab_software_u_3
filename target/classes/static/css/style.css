@@ -709,7 +709,7 @@ body {
 .transaction-amount {
     font-size: 0.98rem;
     font-weight: 700;
-    color: #ff6b6b; /* Muestra los montos negativos de transferencias salientes en rojo suave */
+    color: #ff6b6b;
 }
 
 /* Empty History State */
