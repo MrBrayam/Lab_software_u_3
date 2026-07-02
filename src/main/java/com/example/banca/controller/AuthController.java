@@ -2,8 +2,11 @@ package com.example.banca.controller;
 
 import com.example.banca.dto.LoginRequest;
 import com.example.banca.dto.RegisterRequest;
+import com.example.banca.dto.UpdateProfileRequest;
 import com.example.banca.model.Cliente;
 import com.example.banca.repository.ClienteRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +27,9 @@ public class AuthController {
     public static final String SESSION_CLIENT_ID = "AUTH_CLIENT_ID";
 
     private final ClienteRepository clienteRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public AuthController(ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
@@ -89,12 +95,60 @@ public class AuthController {
         }
 
         Cliente cliente = new Cliente(nombre, apellido, numeroCuenta, pin, BigDecimal.ZERO);
-        clienteRepository.save(cliente);
-        session.setAttribute(SESSION_CLIENT_ID, cliente.getId());
+        allowClientUpdates();
+        try {
+            clienteRepository.save(cliente);
+            session.setAttribute(SESSION_CLIENT_ID, cliente.getId());
+        } finally {
+            disableClientUpdates();
+        }
 
         response.put("success", true);
         response.put("client", buildClientMap(cliente));
         response.put("message", "Cuenta creada correctamente");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/profile")
+    public ResponseEntity<Map<String, Object>> updateProfile(@RequestBody UpdateProfileRequest request, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+
+        Cliente cliente = getAuthenticatedClient(session);
+        if (cliente == null) {
+            response.put("success", false);
+            response.put("message", "Sesión no autenticada");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        String nombre = request.getNombre() != null ? request.getNombre().trim() : "";
+        String apellido = request.getApellido() != null ? request.getApellido().trim() : "";
+        String pin = request.getPin() != null ? request.getPin().trim() : "";
+
+        if (nombre.isEmpty() || apellido.isEmpty() || pin.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Nombre, apellido y PIN son obligatorios");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        if (pin.length() < 4) {
+            response.put("success", false);
+            response.put("message", "El PIN debe tener al menos 4 dígitos");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        allowClientUpdates();
+        try {
+            cliente.setNombre(nombre);
+            cliente.setApellido(apellido);
+            cliente.setPin(pin);
+            clienteRepository.save(cliente);
+        } finally {
+            disableClientUpdates();
+        }
+
+        response.put("success", true);
+        response.put("client", buildClientMap(cliente));
+        response.put("message", "Datos actualizados correctamente");
         return ResponseEntity.ok(response);
     }
 
@@ -137,5 +191,13 @@ public class AuthController {
         clientMap.put("numero_cuenta", cliente.getNumeroCuenta());
         clientMap.put("saldo", cliente.getSaldo().toString());
         return clientMap;
+    }
+
+    private void allowClientUpdates() {
+        entityManager.createNativeQuery("SET @allow_cliente_update = 1").executeUpdate();
+    }
+
+    private void disableClientUpdates() {
+        entityManager.createNativeQuery("SET @allow_cliente_update = 0").executeUpdate();
     }
 }

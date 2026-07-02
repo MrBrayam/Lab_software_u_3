@@ -95,7 +95,10 @@
                     <span class="session-label">Sesión activa</span>
                     <strong id="client-name-display">--</strong>
                 </div>
-                <button id="btn-logout" class="btn-logout" type="button">Salir</button>
+                <div class="session-actions">
+                    <button id="btn-edit-profile" class="btn-logout btn-edit-profile" type="button">Editar datos</button>
+                    <button id="btn-logout" class="btn-logout" type="button">Salir</button>
+                </div>
             </div>
         </div>
 
@@ -250,6 +253,41 @@
             <button id="message-modal-close" type="button" class="btn-primary message-modal__button">
                 <span>Aceptar</span>
             </button>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="profile-modal hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+        <div class="profile-modal__backdrop"></div>
+        <div class="profile-modal__panel">
+            <div class="profile-modal__header">
+                <h2 id="profile-modal-title">Editar datos</h2>
+                <button id="profile-modal-close" type="button" class="btn-back profile-modal__close">×</button>
+            </div>
+
+            <form id="profile-form" class="login-form profile-form">
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label for="profile-name-input">NOMBRE</label>
+                        <input type="text" id="profile-name-input" autocomplete="off" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="profile-lastname-input">APELLIDO</label>
+                        <input type="text" id="profile-lastname-input" autocomplete="off" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="profile-pin-input">PIN</label>
+                    <input type="password" id="profile-pin-input" maxlength="8" autocomplete="off" required>
+                </div>
+
+                <span id="profile-error" class="error-text login-error"></span>
+
+                <button type="submit" id="btn-save-profile" class="btn-primary">
+                    <span>Guardar cambios</span>
+                    <div class="spinner hidden"></div>
+                </button>
+            </form>
         </div>
     </div>
 

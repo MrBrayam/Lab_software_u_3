@@ -16,12 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnShowLogin = document.getElementById('btn-show-login');
     const btnShowRegister = document.getElementById('btn-show-register');
     const btnLogout = document.getElementById('btn-logout');
+    const btnEditProfile = document.getElementById('btn-edit-profile');
     const clientNameDisplay = document.getElementById('client-name-display');
     const messageModal = document.getElementById('message-modal');
     const messageModalTitle = document.getElementById('message-modal-title');
     const messageModalText = document.getElementById('message-modal-text');
     const messageModalClose = document.getElementById('message-modal-close');
     const messageModalIcon = document.getElementById('message-modal-icon');
+    const profileModal = document.getElementById('profile-modal');
+    const profileModalClose = document.getElementById('profile-modal-close');
+    const profileForm = document.getElementById('profile-form');
+    const profileNameInput = document.getElementById('profile-name-input');
+    const profileLastNameInput = document.getElementById('profile-lastname-input');
+    const profilePinInput = document.getElementById('profile-pin-input');
+    const profileError = document.getElementById('profile-error');
+    const btnSaveProfile = document.getElementById('btn-save-profile');
 
     const screenTransfer = document.getElementById('screen-transfer');
     const screenConfirm = document.getElementById('screen-confirm');
@@ -53,12 +62,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeClientBalance = 0.00;
     let activeClientAccount = '';
     let activeClientName = '';
+    let activeClientFirstName = '';
+    let activeClientLastName = '';
     let selectedRecipientName = '';
 
     initializeSession();
 
     btnShowLogin.addEventListener('click', () => setAuthMode('login'));
     btnShowRegister.addEventListener('click', () => setAuthMode('register'));
+    btnEditProfile.addEventListener('click', openProfileModal);
 
     [loginAccountInput, registerAccountInput].forEach((input) => {
         input.addEventListener('input', (e) => {
@@ -167,9 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
             activeClientBalance = 0.00;
             activeClientAccount = '';
             activeClientName = '';
+            activeClientFirstName = '';
+            activeClientLastName = '';
             selectedRecipientName = '';
             resetTransferForm();
             historyList.innerHTML = '';
+            closeProfileModal();
             showLogin();
         }
     });
@@ -178,6 +193,49 @@ document.addEventListener('DOMContentLoaded', () => {
     messageModal.addEventListener('click', (event) => {
         if (event.target === messageModal || event.target.classList.contains('message-modal__backdrop')) {
             hideMessageModal();
+        }
+    });
+
+    profileModalClose.addEventListener('click', closeProfileModal);
+    profileModal.addEventListener('click', (event) => {
+        if (event.target === profileModal || event.target.classList.contains('profile-modal__backdrop')) {
+            closeProfileModal();
+        }
+    });
+
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        profileError.textContent = '';
+        setLoading(btnSaveProfile, true);
+
+        try {
+            const response = await fetch('/api/auth/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: profileNameInput.value.trim(),
+                    apellido: profileLastNameInput.value.trim(),
+                    pin: profilePinInput.value.trim()
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.client) {
+                setLoggedInClient(data.client);
+                updateSessionHeader(data.client);
+                closeProfileModal();
+                showMessageModal('Datos actualizados', data.message || 'Tus datos se actualizaron correctamente.', 'success');
+            } else {
+                profileError.textContent = data.message || 'No se pudieron actualizar los datos.';
+            }
+        } catch (error) {
+            console.error('Error al actualizar datos del cliente:', error);
+            profileError.textContent = 'Error de conexión con el servidor.';
+        } finally {
+            setLoading(btnSaveProfile, false);
         }
     });
 
@@ -194,7 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 activeClientBalance = parseFloat(data.client.saldo);
                 activeClientAccount = data.client.numero_cuenta;
-                activeClientName = `${data.client.nombre} ${data.client.apellido}`;
+                activeClientFirstName = data.client.nombre;
+                activeClientLastName = data.client.apellido;
+                activeClientName = `${activeClientFirstName} ${activeClientLastName}`;
 
                 displayBalance.textContent = activeClientBalance.toFixed(2);
                 historyAccountBadge.textContent = data.client.numero_cuenta;
@@ -403,7 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
         activeClientId = client.id;
         activeClientBalance = parseFloat(client.saldo);
         activeClientAccount = client.numero_cuenta;
-        activeClientName = `${client.nombre} ${client.apellido}`;
+        activeClientFirstName = client.nombre;
+        activeClientLastName = client.apellido;
+        activeClientName = `${activeClientFirstName} ${activeClientLastName}`;
     }
 
     function showApp() {
@@ -447,6 +509,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function hideMessageModal() {
         messageModal.classList.add('hidden');
+    }
+
+    function openProfileModal() {
+        profileNameInput.value = activeClientFirstName || '';
+        profileLastNameInput.value = activeClientLastName || '';
+        profilePinInput.value = '';
+        profileError.textContent = '';
+        profileModal.classList.remove('hidden');
+        profileNameInput.focus();
+    }
+
+    function closeProfileModal() {
+        profileModal.classList.add('hidden');
+        profileForm.reset();
+        profileError.textContent = '';
+    }
+
+    function updateSessionHeader(client) {
+        activeClientFirstName = client.nombre;
+        activeClientLastName = client.apellido;
+        activeClientName = `${client.nombre} ${client.apellido}`;
+        clientNameDisplay.textContent = activeClientName;
     }
 
     function setAuthMode(mode) {

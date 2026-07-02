@@ -239,7 +239,6 @@ public class BancaApiController {
             response.put("success", true);
             response.put("new_balance", origin.getSaldo());
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             // Spring @Transactional ejecutará el rollback automáticamente en caso de error
             response.put("success", false);

@@ -10,7 +10,6 @@ public class TransferRequest {
 
     public TransferRequest() {}
 
-    // Getters and Setters (with snake_case style to match the existing JS fetch request variables)
     public Long getCliente_origen_id() {
         return cliente_origen_id;
     }

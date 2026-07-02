@@ -2,6 +2,7 @@ package com.example.banca.config;
 
 import com.example.banca.model.Cliente;
 import com.example.banca.repository.ClienteRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
@@ -22,9 +23,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private final ClienteRepository clienteRepository;
+    private final JdbcTemplate jdbcTemplate;
 
-    public DatabaseSeeder(ClienteRepository clienteRepository) {
+    public DatabaseSeeder(ClienteRepository clienteRepository, JdbcTemplate jdbcTemplate) {
         this.clienteRepository = clienteRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -38,15 +41,20 @@ public class DatabaseSeeder implements CommandLineRunner {
             clienteRepository.saveAll(Arrays.asList(c1, c2, c3, c4));
             System.out.println("Clientes de prueba sembrados correctamente en la base de datos.");
         } else {
-            clienteRepository.findAll().forEach(cliente -> {
-                if (cliente.getPin() == null || cliente.getPin().isBlank()) {
-                    String pin = DEFAULT_PINS.get(cliente.getNumeroCuenta());
-                    if (pin != null) {
-                        cliente.setPin(pin);
-                        clienteRepository.save(cliente);
+            jdbcTemplate.execute("SET @allow_cliente_update = 1");
+            try {
+                clienteRepository.findAll().forEach(cliente -> {
+                    if (cliente.getPin() == null || cliente.getPin().isBlank()) {
+                        String pin = DEFAULT_PINS.get(cliente.getNumeroCuenta());
+                        if (pin != null) {
+                            cliente.setPin(pin);
+                            clienteRepository.save(cliente);
+                        }
                     }
-                }
-            });
+                });
+            } finally {
+                jdbcTemplate.execute("SET @allow_cliente_update = 0");
+            }
         }
     }
 }

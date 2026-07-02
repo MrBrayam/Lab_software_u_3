@@ -42,7 +42,6 @@ public class Transferencia {
         this.nombreDestinatario = nombreDestinatario;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Design System & Base Styles
-   ========================================================================== */
+
 :root {
     --bg-dark: #0a0e1a;
     --card-bg: rgba(20, 26, 46, 0.65);
@@ -37,9 +35,6 @@ body {
     padding: 40px 20px;
 }
 
-/* ==========================================================================
-   Ambient Glow Background Blobs
-   ========================================================================== */
 .glow-bg {
     position: absolute;
     top: 0;
@@ -84,9 +79,6 @@ body {
     100% { transform: translate(150px, -120px) scale(1.2); }
 }
 
-/* ==========================================================================
-   App Container & Dashboard Layout (Flex / Grid)
-   ========================================================================== */
 .app-container {
     position: relative;
     z-index: 10;
@@ -97,9 +89,6 @@ body {
     gap: 24px;
 }
 
-/* ========================================================================== 
-   Login Screen
-   ========================================================================== */
 .login-screen {
     position: relative;
     z-index: 10;
@@ -231,6 +220,12 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
+.session-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
 .session-info {
     display: flex;
     flex-direction: column;
@@ -263,6 +258,15 @@ body {
 .btn-logout:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.22);
+}
+
+.btn-edit-profile {
+    background: rgba(93, 91, 246, 0.12);
+    border-color: rgba(93, 91, 246, 0.2);
+}
+
+.btn-edit-profile:hover {
+    background: rgba(93, 91, 246, 0.18);
 }
 
 .select-wrapper {
@@ -966,6 +970,62 @@ body {
     margin-top: 0;
 }
 
+/* ========================================================================== 
+   Profile Modal
+   ========================================================================== */
+.profile-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 210;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.profile-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 10, 20, 0.72);
+    backdrop-filter: blur(8px);
+}
+
+.profile-modal__panel {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 520px);
+    background: linear-gradient(180deg, rgba(20, 26, 46, 0.98), rgba(13, 18, 33, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+
+.profile-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.profile-modal__header h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.profile-modal__close {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.profile-form {
+    gap: 16px;
+}
+
 @keyframes popModal {
     from {
         opacity: 0;
@@ -1024,7 +1084,16 @@ body {
         align-items: flex-start;
     }
 
+    .session-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
     .btn-logout {
         width: 100%;
+    }
+
+    .profile-modal__panel {
+        padding: 20px;
     }
 }
