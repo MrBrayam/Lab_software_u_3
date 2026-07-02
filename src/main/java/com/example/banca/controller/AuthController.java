@@ -1,6 +1,7 @@
 package com.example.banca.controller;
 
 import com.example.banca.dto.LoginRequest;
+import com.example.banca.dto.RegisterRequest;
 import com.example.banca.model.Cliente;
 import com.example.banca.repository.ClienteRepository;
 import jakarta.servlet.http.HttpSession;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -51,6 +53,48 @@ public class AuthController {
         session.setAttribute(SESSION_CLIENT_ID, cliente.getId());
         response.put("success", true);
         response.put("client", buildClientMap(cliente));
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest request, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+
+        String nombre = request.getNombre() != null ? request.getNombre().trim() : "";
+        String apellido = request.getApellido() != null ? request.getApellido().trim() : "";
+        String numeroCuenta = request.getNumero_cuenta() != null ? request.getNumero_cuenta().trim() : "";
+        String pin = request.getPin() != null ? request.getPin().trim() : "";
+        if (nombre.isEmpty() || apellido.isEmpty() || numeroCuenta.isEmpty() || pin.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Nombre, apellido, cuenta y PIN son obligatorios");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        if (numeroCuenta.length() < 13) {
+            response.put("success", false);
+            response.put("message", "La cuenta debe tener el formato 009-XXXXXX-XX");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        if (pin.length() < 4) {
+            response.put("success", false);
+            response.put("message", "El PIN debe tener al menos 4 dígitos");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        if (clienteRepository.findByNumeroCuenta(numeroCuenta).isPresent()) {
+            response.put("success", false);
+            response.put("message", "Ya existe una cuenta registrada con ese número");
+            return ResponseEntity.status(409).body(response);
+        }
+
+        Cliente cliente = new Cliente(nombre, apellido, numeroCuenta, pin, BigDecimal.ZERO);
+        clienteRepository.save(cliente);
+        session.setAttribute(SESSION_CLIENT_ID, cliente.getId());
+
+        response.put("success", true);
+        response.put("client", buildClientMap(cliente));
+        response.put("message", "Cuenta creada correctamente");
         return ResponseEntity.ok(response);
     }
 

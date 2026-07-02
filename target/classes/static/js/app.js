@@ -6,8 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginPinInput = document.getElementById('login-pin-input');
     const loginError = document.getElementById('login-error');
     const btnLogin = document.getElementById('btn-login');
+    const registerForm = document.getElementById('register-form');
+    const registerNameInput = document.getElementById('register-name-input');
+    const registerLastNameInput = document.getElementById('register-lastname-input');
+    const registerAccountInput = document.getElementById('register-account-input');
+    const registerPinInput = document.getElementById('register-pin-input');
+    const registerError = document.getElementById('register-error');
+    const btnRegister = document.getElementById('btn-register');
+    const btnShowLogin = document.getElementById('btn-show-login');
+    const btnShowRegister = document.getElementById('btn-show-register');
     const btnLogout = document.getElementById('btn-logout');
     const clientNameDisplay = document.getElementById('client-name-display');
+    const messageModal = document.getElementById('message-modal');
+    const messageModalTitle = document.getElementById('message-modal-title');
+    const messageModalText = document.getElementById('message-modal-text');
+    const messageModalClose = document.getElementById('message-modal-close');
+    const messageModalIcon = document.getElementById('message-modal-icon');
 
     const screenTransfer = document.getElementById('screen-transfer');
     const screenConfirm = document.getElementById('screen-confirm');
@@ -42,6 +56,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedRecipientName = '';
 
     initializeSession();
+
+    btnShowLogin.addEventListener('click', () => setAuthMode('login'));
+    btnShowRegister.addEventListener('click', () => setAuthMode('register'));
+
+    [loginAccountInput, registerAccountInput].forEach((input) => {
+        input.addEventListener('input', (e) => {
+            e.target.value = formatAccountInput(e.target.value);
+        });
+    });
 
     async function initializeSession() {
         try {
@@ -96,6 +119,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        registerError.textContent = '';
+        setLoading(btnRegister, true);
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: registerNameInput.value.trim(),
+                    apellido: registerLastNameInput.value.trim(),
+                    numero_cuenta: registerAccountInput.value.trim(),
+                    pin: registerPinInput.value.trim()
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.client) {
+                setLoggedInClient(data.client);
+                resetRegisterForm();
+                showMessageModal('Cuenta creada', data.message || 'Tu cuenta fue creada correctamente.', 'success');
+                showApp();
+                await loadClientData(activeClientId);
+            } else {
+                registerError.textContent = data.message || 'No se pudo crear la cuenta.';
+            }
+        } catch (error) {
+            console.error('Error al crear la cuenta:', error);
+            registerError.textContent = 'Error de conexión con el servidor.';
+        } finally {
+            setLoading(btnRegister, false);
+        }
+    });
+
     btnLogout.addEventListener('click', async () => {
         try {
             await fetch('/api/auth/logout', { method: 'POST' });
@@ -110,6 +171,13 @@ document.addEventListener('DOMContentLoaded', () => {
             resetTransferForm();
             historyList.innerHTML = '';
             showLogin();
+        }
+    });
+
+    messageModalClose.addEventListener('click', hideMessageModal);
+    messageModal.addEventListener('click', (event) => {
+        if (event.target === messageModal || event.target.classList.contains('message-modal__backdrop')) {
+            hideMessageModal();
         }
     });
 
@@ -192,27 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    accountInput.addEventListener('input', (e) => {
-        let value = e.target.value.replace(/\D/g, '');
-
-        if (value.length > 11) {
-            value = value.substring(0, 11);
-        }
-
-        let formatted = '';
-        if (value.length > 0) {
-            formatted += value.substring(0, 3);
-            if (value.length > 3) {
-                formatted += '-' + value.substring(3, 9);
-                if (value.length > 9) {
-                    formatted += '-' + value.substring(9, 11);
-                }
-            }
-        }
-
-        e.target.value = formatted;
-    });
-
     amountInput.addEventListener('input', () => {
         validateAmount();
     });
@@ -238,12 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const amount = parseFloat(amountInput.value);
 
         if (account.length < 13) {
-            alert('Por favor ingrese una cuenta válida en formato 009-XXXXXX-XX');
+            showMessageModal('Cuenta inválida', 'Ingresa una cuenta válida con el formato 009-XXXXXX-XX.');
             return;
         }
 
         if (account === activeClientAccount) {
-            alert('No puede transferirse a su propia cuenta. Elija otra cuenta destino.');
+            showMessageModal('Cuenta no permitida', 'No puedes transferirte a tu propia cuenta. Elige otra cuenta destino.');
             return;
         }
 
@@ -270,11 +317,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 switchScreen(screenTransfer, screenConfirm);
             } else {
-                alert('No se pudo encontrar el destinatario. Intente nuevamente.');
+                showMessageModal('Usuario no encontrado', data.message || 'No encontramos un usuario registrado con esa cuenta. Verifica el número e inténtalo otra vez.');
             }
         } catch (error) {
             console.error('Error al obtener destinatario:', error);
-            alert('Error de conexión con el servidor.');
+            showMessageModal('Problema de conexión', 'No pudimos consultar el destinatario en este momento. Intenta de nuevo en unos segundos.');
         } finally {
             setLoading(btnTransferir, false);
         }
@@ -318,11 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadTransactions(activeClientId);
                 switchScreen(screenConfirm, screenSuccess);
             } else {
-                alert(data.message || 'Ocurrió un error al procesar la transferencia.');
+                showMessageModal('No se pudo completar', data.message || 'Ocurrió un error al procesar la transferencia.');
             }
         } catch (error) {
             console.error('Error al realizar la transferencia:', error);
-            alert('Error de conexión con el servidor.');
+            showMessageModal('Problema de conexión', 'No pudimos completar la transferencia por un problema de conexión. Intenta nuevamente.');
         } finally {
             setLoading(btnConfirmar, false);
         }
@@ -369,7 +416,10 @@ document.addEventListener('DOMContentLoaded', () => {
         appShell.classList.add('hidden');
         loginScreen.classList.remove('hidden');
         loginError.textContent = '';
+        registerError.textContent = '';
         loginForm.reset();
+        resetRegisterForm();
+        setAuthMode('login');
     }
 
     function setLoading(button, isLoading) {
@@ -385,5 +435,51 @@ document.addEventListener('DOMContentLoaded', () => {
             spinner.classList.add('hidden');
             button.disabled = false;
         }
+    }
+
+    function showMessageModal(title, message, type = 'error') {
+        messageModalTitle.textContent = title;
+        messageModalText.textContent = message;
+        messageModalIcon.textContent = type === 'success' ? '✓' : '!';
+        messageModalIcon.dataset.type = type;
+        messageModal.classList.remove('hidden');
+    }
+
+    function hideMessageModal() {
+        messageModal.classList.add('hidden');
+    }
+
+    function setAuthMode(mode) {
+        const isLogin = mode === 'login';
+        loginForm.classList.toggle('hidden', !isLogin);
+        registerForm.classList.toggle('hidden', isLogin);
+        btnShowLogin.classList.toggle('active', isLogin);
+        btnShowRegister.classList.toggle('active', !isLogin);
+    }
+
+    function resetRegisterForm() {
+        registerForm.reset();
+        registerError.textContent = '';
+    }
+
+    function formatAccountInput(value) {
+        let digits = value.replace(/\D/g, '');
+
+        if (digits.length > 11) {
+            digits = digits.substring(0, 11);
+        }
+
+        let formatted = '';
+        if (digits.length > 0) {
+            formatted += digits.substring(0, 3);
+            if (digits.length > 3) {
+                formatted += '-' + digits.substring(3, 9);
+                if (digits.length > 9) {
+                    formatted += '-' + digits.substring(9, 11);
+                }
+            }
+        }
+
+        return formatted;
     }
 });

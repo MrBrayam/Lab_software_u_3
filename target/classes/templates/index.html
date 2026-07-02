@@ -23,8 +23,13 @@
         <div class="login-card">
             <div class="login-copy">
                 <span class="eyebrow">Acceso seguro</span>
-                <h1>Inicia sesión para operar tus transferencias</h1>
-                <p>Usa tu número de cuenta y PIN para ver tu saldo, historial y movimientos.</p>
+                <h1>Accede o crea tu cuenta</h1>
+                <p>Inicia sesión con tu cuenta y PIN, o crea una nueva cuenta de cliente en segundos.</p>
+            </div>
+
+            <div class="auth-tabs" role="tablist" aria-label="Acceso de cliente">
+                <button type="button" id="btn-show-login" class="auth-tab active">Iniciar sesión</button>
+                <button type="button" id="btn-show-register" class="auth-tab">Crear cuenta</button>
             </div>
 
             <form id="login-form" class="login-form">
@@ -42,6 +47,38 @@
 
                 <button type="submit" id="btn-login" class="btn-primary">
                     <span>Entrar</span>
+                    <div class="spinner hidden"></div>
+                </button>
+            </form>
+
+            <form id="register-form" class="login-form hidden">
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label for="register-name-input">NOMBRE</label>
+                        <input type="text" id="register-name-input" placeholder="María" autocomplete="off" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="register-lastname-input">APELLIDO</label>
+                        <input type="text" id="register-lastname-input" placeholder="Pérez" autocomplete="off" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="register-account-input">NÚMERO DE CUENTA</label>
+                    <input type="text" id="register-account-input" placeholder="009-123456-78" maxlength="13" autocomplete="off" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label for="register-pin-input">PIN</label>
+                        <input type="password" id="register-pin-input" placeholder="1234" maxlength="8" autocomplete="off" required>
+                    </div>
+                </div>
+
+                <span id="register-error" class="error-text login-error"></span>
+
+                <button type="submit" id="btn-register" class="btn-primary">
+                    <span>Crear cuenta</span>
                     <div class="spinner hidden"></div>
                 </button>
             </form>
@@ -204,6 +241,18 @@
     </div>
 
     <!-- Spring Boot standard path for js/app.js -->
+    <div id="message-modal" class="message-modal hidden" role="dialog" aria-modal="true" aria-labelledby="message-modal-title">
+        <div class="message-modal__backdrop"></div>
+        <div class="message-modal__panel">
+            <div class="message-modal__icon" id="message-modal-icon">!</div>
+            <h2 id="message-modal-title" class="message-modal__title">Atención</h2>
+            <p id="message-modal-text" class="message-modal__text"></p>
+            <button id="message-modal-close" type="button" class="btn-primary message-modal__button">
+                <span>Aceptar</span>
+            </button>
+        </div>
+    </div>
+
     <script src="/js/app.js"></script>
 </body>
 </html>
