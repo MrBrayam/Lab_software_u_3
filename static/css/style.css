@@ -1,0 +1,531 @@
+/* ==========================================================================
+   Design System & Base Styles
+   ========================================================================== */
+:root {
+    --bg-dark: #0a0e1a;
+    --card-bg: rgba(20, 26, 46, 0.65);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary-color: #5d5bf6;
+    --primary-hover: #4b48e3;
+    --success-color: #00e676;
+    --success-hover: #00c853;
+    --error-color: #ff5252;
+    --text-main: #f5f6fa;
+    --text-muted: #8b9bb4;
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-focus-border: rgba(93, 91, 246, 0.5);
+    --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ==========================================================================
+   Ambient Glow Background Blobs
+   ========================================================================== */
+.glow-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.blob {
+    position: absolute;
+    width: 450px;
+    height: 450px;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+.blob-1 {
+    background: radial-gradient(circle, var(--primary-color) 0%, rgba(93,91,246,0) 70%);
+    top: -100px;
+    right: -100px;
+    animation: floatBlob1 20s infinite alternate ease-in-out;
+}
+
+.blob-2 {
+    background: radial-gradient(circle, #00e676 0%, rgba(0,230,118,0) 70%);
+    bottom: -150px;
+    left: -150px;
+    animation: floatBlob2 25s infinite alternate ease-in-out;
+}
+
+@keyframes floatBlob1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-100px, 80px) scale(1.1); }
+}
+
+@keyframes floatBlob2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(120px, -90px) scale(1.15); }
+}
+
+/* ==========================================================================
+   App Container & Glassmorphism Card
+   ========================================================================== */
+.app-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px;
+}
+
+.bank-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    border-radius: 28px;
+    padding: 32px;
+    width: 420px;
+    max-width: 90%;
+    min-height: 520px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================================================
+   Screen Transitions (Single Page App)
+   ========================================================================== */
+.screen {
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    right: 32px;
+    bottom: 32px;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    pointer-events: none;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.screen.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* ==========================================================================
+   Screen Headers
+   ========================================================================== */
+.screen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.header-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: 0.5px;
+}
+
+.balance-badge {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 6px 14px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.balance-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.balance-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-back:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+}
+
+/* ==========================================================================
+   Form Inputs & Labels
+   ========================================================================== */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.input-group input {
+    background: var(--input-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--input-focus-border);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 1px;
+}
+
+.amount-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.amount-wrapper input {
+    padding-left: 45px;
+    width: 100%;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 18px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.input-hint {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    padding-left: 4px;
+}
+
+.error-text {
+    font-size: 0.75rem;
+    color: var(--error-color);
+    padding-left: 4px;
+    height: 16px;
+    display: block;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #7d7bf8 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 14px;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 8px 20px rgba(93, 91, 246, 0.3);
+    margin-top: 10px;
+    position: relative;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(93, 91, 246, 0.45);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+.btn-success-confirm {
+    background: linear-gradient(135deg, var(--success-color) 0%, #26ff9c 100%);
+    box-shadow: 0 8px 20px rgba(0, 230, 118, 0.25);
+}
+
+.btn-success-confirm:hover {
+    box-shadow: 0 10px 24px rgba(0, 230, 118, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 14px;
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    width: 100%;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Screen 2: Confirmation
+   ========================================================================== */
+.confirm-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.confirm-amount-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+}
+
+.confirm-amount-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.confirm-amount-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.recipient-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+/* ==========================================================================
+   Screen 3: Success Screen & Animated Checkmark
+   ========================================================================== */
+.success-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    flex-grow: 1;
+    gap: 20px;
+}
+
+.success-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.success-desc {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 280px;
+    line-height: 1.5;
+}
+
+.success-summary {
+    width: 100%;
+    background: rgba(0, 230, 118, 0.04);
+    border: 1px solid rgba(0, 230, 118, 0.1);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 10px 0;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+}
+
+.summary-item span {
+    color: var(--text-muted);
+}
+
+.summary-item strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+/* Checkmark SVG Animation */
+.checkmark-wrapper {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 10px;
+}
+
+.checkmark {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: var(--success-color);
+    stroke-miterlimit: 10;
+    box-shadow: inset 0px 0px 0px var(--success-color);
+    animation: fillCheckmark .4s ease-in-out .4s forwards, scaleCheckmark .3s ease-in-out .9s alternate both;
+}
+
+.checkmark__circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: var(--success-color);
+    fill: none;
+    animation: strokeCheckmark 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark__check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: strokeCheckmark 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+}
+
+@keyframes strokeCheckmark {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes fillCheckmark {
+    100% { box-shadow: inset 0px 0px 0px 45px rgba(0, 230, 118, 0.1); }
+}
+
+@keyframes scaleCheckmark {
+    0% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+    100% { transform: none; }
+}
+
+/* ==========================================================================
+   Loading Spinner
+   ========================================================================== */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
