@@ -18,23 +18,47 @@
         <div class="blob blob-2"></div>
     </div>
 
-    <!-- Main Container -->
-    <div class="app-container">
-        
-        <!-- Top Bar: Active Client Selector -->
-        <div class="top-bar">
-            <div class="client-selector-card">
-                <label for="client-select">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                    <span>Cliente Activo:</span>
-                </label>
-                <div class="select-wrapper">
-                    <select id="client-select">
-                        <!-- Dynamically filled -->
-                    </select>
+    <!-- Login Screen -->
+    <section id="login-screen" class="login-screen">
+        <div class="login-card">
+            <div class="login-copy">
+                <span class="eyebrow">Acceso seguro</span>
+                <h1>Inicia sesión para operar tus transferencias</h1>
+                <p>Usa tu número de cuenta y PIN para ver tu saldo, historial y movimientos.</p>
+            </div>
+
+            <form id="login-form" class="login-form">
+                <div class="input-group">
+                    <label for="login-account-input">NÚMERO DE CUENTA</label>
+                    <input type="text" id="login-account-input" placeholder="009-123456-78" maxlength="13" autocomplete="off" required>
                 </div>
+
+                <div class="input-group">
+                    <label for="login-pin-input">PIN</label>
+                    <input type="password" id="login-pin-input" placeholder="1234" maxlength="4" autocomplete="off" required>
+                </div>
+
+                <span id="login-error" class="error-text login-error"></span>
+
+                <button type="submit" id="btn-login" class="btn-primary">
+                    <span>Entrar</span>
+                    <div class="spinner hidden"></div>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Main Container -->
+    <div id="app-shell" class="app-container hidden">
+        
+        <!-- Top Bar: Active Session -->
+        <div class="top-bar">
+            <div class="session-bar">
+                <div class="session-info">
+                    <span class="session-label">Sesión activa</span>
+                    <strong id="client-name-display">--</strong>
+                </div>
+                <button id="btn-logout" class="btn-logout" type="button">Salir</button>
             </div>
         </div>
 
@@ -48,7 +72,7 @@
                     <div class="screen-header">
                         <span class="header-title">Nueva Transferencia</span>
                         <div class="balance-badge">
-                            <span class="balance-label">saldo:</span>
+                            <span class="balance-label">saldo disponible:</span>
                             <span class="balance-value">S/ <span id="display-balance">0.00</span></span>
                         </div>
                     </div>
@@ -166,7 +190,7 @@
                 <div class="history-header">
                     <div>
                         <h3 class="history-title">Historial de Transacciones</h3>
-                        <p class="history-subtitle">Transferencias enviadas desde esta cuenta</p>
+                        <p class="history-subtitle">Ingresos y egresos de la cuenta autenticada</p>
                     </div>
                     <span id="history-account-badge" class="account-badge">000-000000-00</span>
                 </div>

@@ -20,15 +20,19 @@ public class Cliente {
     @Column(name = "numero_cuenta", nullable = false, unique = true, length = 50)
     private String numeroCuenta;
 
+    @Column(length = 20)
+    private String pin;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal saldo;
 
     public Cliente() {}
 
-    public Cliente(String nombre, String apellido, String numeroCuenta, BigDecimal saldo) {
+    public Cliente(String nombre, String apellido, String numeroCuenta, String pin, BigDecimal saldo) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.numeroCuenta = numeroCuenta;
+        this.pin = pin;
         this.saldo = saldo;
     }
 
@@ -63,6 +67,14 @@ public class Cliente {
 
     public void setNumeroCuenta(String numeroCuenta) {
         this.numeroCuenta = numeroCuenta;
+    }
+
+    public String getPin() {
+        return pin;
+    }
+
+    public void setPin(String pin) {
+        this.pin = pin;
     }
 
     public BigDecimal getSaldo() {

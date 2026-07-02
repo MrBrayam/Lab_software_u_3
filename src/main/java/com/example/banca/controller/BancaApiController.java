@@ -5,6 +5,7 @@ import com.example.banca.model.Cliente;
 import com.example.banca.model.Transferencia;
 import com.example.banca.repository.ClienteRepository;
 import com.example.banca.repository.TransferenciaRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -20,41 +22,23 @@ public class BancaApiController {
     private final ClienteRepository clienteRepository;
     private final TransferenciaRepository transferenciaRepository;
 
-    // Base de datos simulada de destinatarios para dar una experiencia premium (fallback)
-    private static final Map<String, String> MOCK_RECIPIENTS = new HashMap<>();
-    static {
-        MOCK_RECIPIENTS.put("009-123456-78", "Carlos Alberto Mendoza");
-        MOCK_RECIPIENTS.put("009-987654-32", "Ana María Rodríguez");
-        MOCK_RECIPIENTS.put("009-555444-33", "Luis Fernando Torres");
-        MOCK_RECIPIENTS.put("009-999999-99", "Gabriela Sofía Ortiz");
-        MOCK_RECIPIENTS.put("009-111222-33", "Jorge Luis Bastidas");
-    }
-
-    private static final String[] FIRST_NAMES = {"María", "José", "Juan", "Luis", "Carlos", "Ana", "Luisa", "Jorge", "Sofía", "Pedro"};
-    private static final String[] LAST_NAMES = {"Pérez", "Rodríguez", "González", "Gómez", "Fernández", "López", "Sánchez", "Martínez", "Torres", "Alva"};
-
     public BancaApiController(ClienteRepository clienteRepository, TransferenciaRepository transferenciaRepository) {
         this.clienteRepository = clienteRepository;
         this.transferenciaRepository = transferenciaRepository;
     }
 
     @GetMapping("/clients")
-    public ResponseEntity<Map<String, Object>> getClients() {
+    public ResponseEntity<Map<String, Object>> getClients(HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         try {
-            List<Cliente> clients = clienteRepository.findAll();
-            
-            // Formatear la lista de clientes para enviar la estructura exacta esperada por JS
-            List<Map<String, Object>> formattedClients = new ArrayList<>();
-            for (Cliente c : clients) {
-                Map<String, Object> clientMap = new HashMap<>();
-                clientMap.put("id", c.getId());
-                clientMap.put("nombre", c.getNombre());
-                clientMap.put("apellido", c.getApellido());
-                clientMap.put("numero_cuenta", c.getNumeroCuenta());
-                clientMap.put("saldo", c.getSaldo().toString());
-                formattedClients.add(clientMap);
+            Cliente authenticatedClient = requireAuthenticatedClient(session);
+            if (authenticatedClient == null) {
+                return unauthorized(response);
             }
+
+            // Mantener la estructura de respuesta, pero limitarla a la sesión activa.
+            List<Map<String, Object>> formattedClients = new ArrayList<>();
+            formattedClients.add(buildClientMap(authenticatedClient));
             
             response.put("success", true);
             response.put("clients", formattedClients);
@@ -67,21 +51,25 @@ public class BancaApiController {
     }
 
     @GetMapping("/clients/{id}")
-    public ResponseEntity<Map<String, Object>> getClient(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getClient(@PathVariable Long id, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         try {
+            Cliente authenticatedClient = requireAuthenticatedClient(session);
+            if (authenticatedClient == null) {
+                return unauthorized(response);
+            }
+
+            if (!authenticatedClient.getId().equals(id)) {
+                response.put("success", false);
+                response.put("message", "No autorizado");
+                return ResponseEntity.status(403).body(response);
+            }
+
             Optional<Cliente> clientOpt = clienteRepository.findById(id);
             if (clientOpt.isPresent()) {
                 Cliente c = clientOpt.get();
-                Map<String, Object> clientMap = new HashMap<>();
-                clientMap.put("id", c.getId());
-                clientMap.put("nombre", c.getNombre());
-                clientMap.put("apellido", c.getApellido());
-                clientMap.put("numero_cuenta", c.getNumeroCuenta());
-                clientMap.put("saldo", c.getSaldo().toString());
-
                 response.put("success", true);
-                response.put("client", clientMap);
+                response.put("client", buildClientMap(c));
                 return ResponseEntity.ok(response);
             }
             response.put("success", false);
@@ -95,10 +83,25 @@ public class BancaApiController {
     }
 
     @GetMapping("/clients/{id}/transactions")
-    public ResponseEntity<Map<String, Object>> getClientTransactions(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getClientTransactions(@PathVariable Long id, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         try {
+            Cliente authenticatedClient = requireAuthenticatedClient(session);
+            if (authenticatedClient == null) {
+                return unauthorized(response);
+            }
+
+            if (!authenticatedClient.getId().equals(id)) {
+                response.put("success", false);
+                response.put("message", "No autorizado");
+                return ResponseEntity.status(403).body(response);
+            }
+
             List<Transferencia> transactions = transferenciaRepository.findByClienteOrigenIdOrderByFechaDesc(id);
+            transactions.addAll(transferenciaRepository.findByCuentaDestinoOrderByFechaDesc(authenticatedClient.getNumeroCuenta()));
+            transactions = transactions.stream()
+                    .sorted(Comparator.comparing(Transferencia::getFecha).reversed())
+                    .collect(Collectors.toList());
             
             List<Map<String, Object>> formattedTxList = new ArrayList<>();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -109,6 +112,9 @@ public class BancaApiController {
                 txMap.put("monto", t.getMonto());
                 txMap.put("nombre_destinatario", t.getNombreDestinatario());
                 txMap.put("fecha_formateada", t.getFecha().format(formatter));
+                boolean incoming = authenticatedClient.getNumeroCuenta().equals(t.getCuentaDestino());
+                txMap.put("tipo", incoming ? "ingreso" : "egreso");
+                txMap.put("monto_visible", incoming ? t.getMonto() : t.getMonto().negate());
                 formattedTxList.add(txMap);
             }
             
@@ -123,8 +129,13 @@ public class BancaApiController {
     }
 
     @GetMapping("/recipient")
-    public ResponseEntity<Map<String, Object>> getRecipient(@RequestParam String cuenta) {
+    public ResponseEntity<Map<String, Object>> getRecipient(@RequestParam String cuenta, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
+        Cliente authenticatedClient = requireAuthenticatedClient(session);
+        if (authenticatedClient == null) {
+            return unauthorized(response);
+        }
+
         String cleanCuenta = cuenta.trim();
         if (cleanCuenta.isEmpty()) {
             response.put("success", false);
@@ -133,10 +144,15 @@ public class BancaApiController {
         }
 
         try {
-            // 1. Intentar buscar en la base de datos si la cuenta pertenece a otro cliente registrado
             Optional<Cliente> dbClientOpt = clienteRepository.findByNumeroCuenta(cleanCuenta);
             if (dbClientOpt.isPresent()) {
                 Cliente dbClient = dbClientOpt.get();
+                if (authenticatedClient.getNumeroCuenta().equals(dbClient.getNumeroCuenta())) {
+                    response.put("success", false);
+                    response.put("message", "No puede transferirse a su propia cuenta");
+                    return ResponseEntity.badRequest().body(response);
+                }
+
                 response.put("success", true);
                 response.put("name", dbClient.getNombre() + " " + dbClient.getApellido());
                 return ResponseEntity.ok(response);
@@ -145,30 +161,22 @@ public class BancaApiController {
             System.err.println("Error al buscar cliente por cuenta: " + e.getMessage());
         }
 
-        // 2. Si no es un cliente, buscar en MOCK_RECIPIENTS o generar de forma determinista
-        String name;
-        if (MOCK_RECIPIENTS.containsKey(cleanCuenta)) {
-            name = MOCK_RECIPIENTS.get(cleanCuenta);
-        } else {
-            // Generador determinista basado en el hash del número de cuenta
-            int hash = Math.abs(cleanCuenta.hashCode());
-            String firstName = FIRST_NAMES[hash % FIRST_NAMES.length];
-            String lastName = LAST_NAMES[(hash / FIRST_NAMES.length) % LAST_NAMES.length];
-            name = firstName + " " + lastName;
-            MOCK_RECIPIENTS.put(cleanCuenta, name); // Cachearlo en memoria
-        }
-
-        response.put("success", true);
-        response.put("name", name);
-        return ResponseEntity.ok(response);
+        response.put("success", false);
+        response.put("message", "La cuenta no existe en la base de datos");
+        return ResponseEntity.status(404).body(response);
     }
 
     @PostMapping("/transfer")
     @Transactional
-    public ResponseEntity<Map<String, Object>> transfer(@RequestBody TransferRequest request) {
+    public ResponseEntity<Map<String, Object>> transfer(@RequestBody TransferRequest request, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         
-        Long originId = request.getCliente_origen_id();
+        Cliente authenticatedClient = requireAuthenticatedClient(session);
+        if (authenticatedClient == null) {
+            return unauthorized(response);
+        }
+
+        Long originId = authenticatedClient.getId();
         String destAccount = request.getCuenta_destino() != null ? request.getCuenta_destino().trim() : "";
         BigDecimal amount = request.getMonto();
         String destName = request.getNombre_destinatario() != null ? request.getNombre_destinatario().trim() : "";
@@ -187,19 +195,26 @@ public class BancaApiController {
 
         try {
             // 1. Obtener cliente de origen
-            Optional<Cliente> originOpt = clienteRepository.findById(originId);
-            if (originOpt.isEmpty()) {
+            Cliente origin = authenticatedClient;
+
+            Optional<Cliente> destOpt = clienteRepository.findByNumeroCuenta(destAccount);
+            if (destOpt.isEmpty()) {
                 response.put("success", false);
-                response.put("message", "Cliente de origen no existe");
+                response.put("message", "La cuenta destino no existe en la base de datos");
                 return ResponseEntity.status(404).body(response);
             }
-            Cliente origin = originOpt.get();
+
+            Cliente dest = destOpt.get();
 
             // 2. Evitar transferirse a sí mismo
-            if (origin.getNumeroCuenta().equals(destAccount)) {
+            if (origin.getNumeroCuenta().equals(dest.getNumeroCuenta())) {
                 response.put("success", false);
                 response.put("message", "No puede transferirse a su propia cuenta");
                 return ResponseEntity.badRequest().body(response);
+            }
+
+            if (destName.isEmpty()) {
+                destName = dest.getNombre() + " " + dest.getApellido();
             }
 
             // 3. Validar saldo
@@ -213,13 +228,9 @@ public class BancaApiController {
             origin.setSaldo(origin.getSaldo().subtract(amount));
             clienteRepository.save(origin);
 
-            // 5. Si la cuenta destino pertenece a otro cliente registrado, incrementarle su saldo
-            Optional<Cliente> destOpt = clienteRepository.findByNumeroCuenta(destAccount);
-            if (destOpt.isPresent()) {
-                Cliente dest = destOpt.get();
-                dest.setSaldo(dest.getSaldo().add(amount));
-                clienteRepository.save(dest);
-            }
+            // 5. Incrementar saldo al cliente destino registrado
+            dest.setSaldo(dest.getSaldo().add(amount));
+            clienteRepository.save(dest);
 
             // 6. Registrar la transferencia en el historial
             Transferencia tx = new Transferencia(origin, destAccount, amount, destName);
@@ -235,5 +246,30 @@ public class BancaApiController {
             response.put("message", "Error interno en la transferencia: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
+    }
+
+    private Cliente requireAuthenticatedClient(HttpSession session) {
+        Object clientId = session.getAttribute(AuthController.SESSION_CLIENT_ID);
+        if (!(clientId instanceof Long authenticatedId)) {
+            return null;
+        }
+
+        return clienteRepository.findById(authenticatedId).orElse(null);
+    }
+
+    private ResponseEntity<Map<String, Object>> unauthorized(Map<String, Object> response) {
+        response.put("success", false);
+        response.put("message", "Sesión no autenticada");
+        return ResponseEntity.status(401).body(response);
+    }
+
+    private Map<String, Object> buildClientMap(Cliente c) {
+        Map<String, Object> clientMap = new HashMap<>();
+        clientMap.put("id", c.getId());
+        clientMap.put("nombre", c.getNombre());
+        clientMap.put("apellido", c.getApellido());
+        clientMap.put("numero_cuenta", c.getNumeroCuenta());
+        clientMap.put("saldo", c.getSaldo().toString());
+        return clientMap;
     }
 }
