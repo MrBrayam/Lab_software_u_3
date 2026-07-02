@@ -31,8 +31,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     position: relative;
+    padding: 40px 20px;
 }
 
 /* ==========================================================================
@@ -50,11 +52,11 @@ body {
 
 .blob {
     position: absolute;
-    width: 450px;
-    height: 450px;
+    width: 500px;
+    height: 500px;
     border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.25;
+    filter: blur(120px);
+    opacity: 0.22;
     pointer-events: none;
 }
 
@@ -62,49 +64,134 @@ body {
     background: radial-gradient(circle, var(--primary-color) 0%, rgba(93,91,246,0) 70%);
     top: -100px;
     right: -100px;
-    animation: floatBlob1 20s infinite alternate ease-in-out;
+    animation: floatBlob1 25s infinite alternate ease-in-out;
 }
 
 .blob-2 {
     background: radial-gradient(circle, #00e676 0%, rgba(0,230,118,0) 70%);
     bottom: -150px;
     left: -150px;
-    animation: floatBlob2 25s infinite alternate ease-in-out;
+    animation: floatBlob2 30s infinite alternate ease-in-out;
 }
 
 @keyframes floatBlob1 {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(-100px, 80px) scale(1.1); }
+    100% { transform: translate(-150px, 120px) scale(1.15); }
 }
 
 @keyframes floatBlob2 {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(120px, -90px) scale(1.15); }
+    100% { transform: translate(150px, -120px) scale(1.2); }
 }
 
 /* ==========================================================================
-   App Container & Glassmorphism Card
+   App Container & Dashboard Layout (Flex / Grid)
    ========================================================================== */
 .app-container {
     position: relative;
     z-index: 10;
     width: 100%;
+    max-width: 960px;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    perspective: 1000px;
+    flex-direction: column;
+    gap: 24px;
 }
 
-.bank-card {
+/* ==========================================================================
+   Top Bar & Custom Select
+   ========================================================================== */
+.top-bar {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.client-selector-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.client-selector-card label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.client-selector-card label svg {
+    color: var(--primary-color);
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper select {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-main);
+    padding: 8px 36px 8px 16px;
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.25s, background-color 0.25s;
+}
+
+.select-wrapper select:focus {
+    border-color: var(--primary-color);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.select-wrapper::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--text-muted);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Dashboard Layout Grid
+   ========================================================================== */
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 1.3fr;
+    gap: 32px;
+    align-items: start;
+}
+
+/* ==========================================================================
+   Cards (Bank Transfer & History)
+   ========================================================================== */
+.bank-card, .history-card {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--card-border);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
     border-radius: 28px;
     padding: 32px;
-    width: 420px;
-    max-width: 90%;
     min-height: 520px;
     position: relative;
     overflow: hidden;
@@ -511,6 +598,144 @@ body {
 }
 
 /* ==========================================================================
+   Column 2: History Card & Transaction List
+   ========================================================================== */
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+}
+
+.history-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.history-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.account-badge {
+    background: rgba(93, 91, 246, 0.1);
+    border: 1px solid rgba(93, 91, 246, 0.15);
+    color: #a5a4ff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    max-height: 380px;
+    padding-right: 6px;
+    flex-grow: 1;
+}
+
+/* Scrollbar Customization */
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Transaction List Item */
+.transaction-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s, background-color 0.2s;
+    animation: slideInTx 0.35s ease-out;
+}
+
+.transaction-item:hover {
+    transform: translateX(4px);
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+@keyframes slideInTx {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.transaction-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.transaction-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.transaction-meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.transaction-amount {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #ff6b6b; /* Muestra los montos negativos de transferencias salientes en rojo suave */
+}
+
+/* Empty History State */
+.empty-history {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    gap: 16px;
+    padding: 60px 20px;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.empty-history svg {
+    color: rgba(255, 255, 255, 0.08);
+}
+
+.empty-history p {
+    font-size: 0.82rem;
+    max-width: 200px;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
    Loading Spinner
    ========================================================================== */
 .spinner {
@@ -528,4 +753,30 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Media Queries for Responsiveness
+   ========================================================================== */
+@media (max-width: 860px) {
+    body {
+        padding: 24px 16px;
+        overflow-y: auto;
+    }
+    
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        width: 100%;
+        max-width: 440px;
+        margin: 0 auto;
+    }
+
+    .bank-card, .history-card {
+        min-height: auto;
+    }
+
+    .history-list {
+        max-height: 280px;
+    }
 }
